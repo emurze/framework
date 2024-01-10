@@ -4,7 +4,7 @@ from asyncio import AbstractEventLoop
 from dataclasses import dataclass
 from typing import Any
 
-from ports import IServer, IConnectionHandler, IParser
+from ports import IServer, IConnectionHandler
 
 
 # class HTTPParser(IParser):
@@ -18,7 +18,7 @@ class ConnectionHandler(IConnectionHandler):
 
     async def handle(self, conn: Any, batch: int = 1024) -> None:
         try:
-            while request := await self.loop.sock_recv(conn, batch):
+            while request := await self.loop.sock_recv(conn, batch):  # client
                 response = f"Hello {request.decode()}".encode()
                 await self.loop.sock_sendall(conn, response)
         finally:
@@ -55,9 +55,10 @@ class Server(IServer):
         print(f'Listening on {self.host}:{self.port}')
 
         while True:
+            # 3 test several clients
             conn, address = await self.loop.sock_accept(self.server_sock)
             print(f'Connection from {address[0]}')
-            asyncio.Task(self.conn_handler.handle(conn))  # key moment
+            asyncio.Task(self.conn_handler.handle(conn))
 
     async def run(self) -> None:
         await self.listen_for_connections()
