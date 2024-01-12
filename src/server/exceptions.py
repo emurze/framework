@@ -8,20 +8,20 @@ class CLIError(Exception):
         print(f'Error: {message}')
 
 
-class NoAppFound(CLIError):
-    pass
-
-
-class AppParseError(CLIError):
-    pass
-
-
 class BaseError(Exception):
     def __init__(self, message: str = "") -> None:
         self.message = message
 
     def __str__(self) -> str:
         return self.message
+
+
+class NoAppFound(CLIError):
+    pass
+
+
+class AppParseError(CLIError):
+    pass
 
 
 class HttpParserError(BaseError):

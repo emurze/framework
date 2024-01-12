@@ -24,6 +24,7 @@ class HTTPParser(IParser):
 
     def parse_request(self, data_http: bytes) -> dict | NoReturn:
         try:
+            print(data_http)
             request, headers_body = data_http.split(b"\r\n", 1)
             method, path, type_version = request.split(b" ")
             *headers, body = headers_body.split(b"\r\n")
@@ -49,6 +50,7 @@ class HTTPParser(IParser):
         for response in responses:
             response_type = response.get("type")
 
+            # Todo: Rewrite it on Events if we extend
             if response_type == "http.response.start":
                 status_code = response.get("status", 200)
                 http_response += f"HTTP/1.1 {status_code} OK\r\n".encode()

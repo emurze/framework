@@ -1,40 +1,27 @@
 import asyncio
-import socket
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
-from server.ports import IServer, IConnectionHandler
+from server.ports import IServer, IConnectionHandler, IEventLoop, IServerSocket
 
 
 @dataclass
 class Server(IServer):
-    app: Callable
-    loop: Any
+    loop: IEventLoop
     conn_handler: IConnectionHandler
-    host: str = "0.0.0.0"
-    port: int = 8000
-
-    def __post_init__(self) -> None:
-        self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_sock.setblocking(False)
-        self.server_sock.bind((self.host, self.port))
+    server_sock: IServerSocket
 
     async def listen_for_connections(self) -> None:
         """
-        Async waiting task to create connections
-
-        event: new_connection
+        Async waiting task to create connection using connection handler
         """
 
         self.server_sock.listen()
-        print(f"Listening on {self.host}:{self.port}")
+        print(f"Listening on {self.server_sock.host}:{self.server_sock.port}")
 
         while True:
             conn, address = await self.loop.sock_accept(self.server_sock)
             print(f"Connection from {address[0]}")
-            asyncio.Task(self.conn_handler.handle(self.loop, conn))
+            asyncio.Task(self.conn_handler.handle(self.loop.set_conn(conn)))
 
     async def run(self) -> None:
         await self.listen_for_connections()
