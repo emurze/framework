@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-app = FastAPI(title='Twitter API')
+app_fixture = FastAPI(title='Twitter API')
 
 users = [
     {'id': 1, 'username': 'Vlad'}
@@ -13,6 +13,7 @@ class User(BaseModel):
     username: str
 
 
-@app.get('/users/{user_id}', response_model=list[User])
+@app_fixture.get('/users/{user_id}', response_model=list[User])
 def get_user(user_id: int):
     return [user for user in users if user["id"] == user_id]
+

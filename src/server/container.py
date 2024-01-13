@@ -1,28 +1,28 @@
 import asyncio
 import sys
-from asyncio import AbstractEventLoop
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from functools import partial
 from typing import Any, Optional
 
-from server.infrastructure.loop import EventLoopProxy
+from server.infrastructure.loop import EventLoop
 from server.infrastructure.parser import HTTPParser
-from server.infrastructure.sockets import ServerSocket
+from server.infrastructure.socket import Socket
 from server.infrastructure.spec import ASGISpec
 from server.ports import (
-    IParser, IConnectionHandler, IServer, ISpec, IEventLoop, IServerSocket
+    IParser, IConnectionHandler, IServer, ISpec, IEventLoop, ISocket
 )
 from server.services.conn_handler import ConnectionHandler
 from server.services.server import Server
 from server.utils import get_app_from_str
 
 
-def get_server_socket() -> IServerSocket:
-    return ServerSocket()
+def get_server_socket() -> ISocket:
+    return Socket()
 
 
 def get_event_loop() -> IEventLoop:
-    return EventLoopProxy()
+    return EventLoop()
 
 
 def get_parser() -> IParser:
@@ -36,7 +36,7 @@ def get_spec() -> ISpec:
 def get_conn_handler(
     parser: IParser = get_parser(),
     spec: ISpec = get_spec(),
-    app: Callable = get_app_from_str(sys.argv),
+    app: Optional[Callable] = None,
 ) -> IConnectionHandler:
     return ConnectionHandler(app, parser, spec)
 
@@ -44,11 +44,11 @@ def get_conn_handler(
 def get_server(
     loop: Any,
     conn_handler: IConnectionHandler = get_conn_handler(),
-    server_sock: IServerSocket = get_server_socket(),
+    server_sock: ISocket = get_server_socket(),
     port: Optional[int] = None,
     host: Optional[str] = None,
 ) -> IServer:
-    opt_kwargs = {}
+    opt_kwargs: dict = {}
 
     if port is not None:
         opt_kwargs["port"] = port
@@ -60,16 +60,18 @@ def get_server(
     return Server(loop, conn_handler, server_sock)
 
 
-@dataclass(frozen=True)
+@dataclass
 class ServerContainer:
+    app_factory: Callable = partial(get_app_from_str, sys.argv)
     port: Optional[int] = None
     host: Optional[str] = None
     event_loop: IEventLoop = field(default_factory=get_event_loop)
-    server_sock: IServerSocket = field(default_factory=get_server_socket)
+    server_sock: ISocket = field(default_factory=get_server_socket)
     conn_handler: IConnectionHandler = field(default_factory=get_conn_handler)
 
     def run(self):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        self.conn_handler.app = self.app_factory()  # app parsing process
         server = get_server(
             loop=self.event_loop.set_loop(loop),
             conn_handler=self.conn_handler,
@@ -77,5 +79,7 @@ class ServerContainer:
             port=self.port,
             host=self.host,
         )
-        loop.run_until_complete(server.run())
-        loop.close()
+        try:
+            loop.run_until_complete(server.run())
+        except KeyboardInterrupt:
+            print('\nServer was stopped')

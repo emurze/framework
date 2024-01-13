@@ -1,18 +1,19 @@
 import asyncio
 from dataclasses import dataclass
 
-from server.ports import IServer, IConnectionHandler, IEventLoop, IServerSocket
+from server.ports import IServer, IConnectionHandler, IEventLoop, ISocket
 
 
 @dataclass
 class Server(IServer):
     loop: IEventLoop
     conn_handler: IConnectionHandler
-    server_sock: IServerSocket
+    server_sock: ISocket
 
     async def listen_for_connections(self) -> None:
         """
-        Async waiting task to create connection using connection handler
+        Waiting event that creates a new connection event delegating connection
+        handling to connection handler
         """
 
         self.server_sock.listen()
@@ -23,5 +24,13 @@ class Server(IServer):
             print(f"Connection from {address[0]}")
             asyncio.Task(self.conn_handler.handle(self.loop.set_conn(conn)))
 
+    async def stop(self) -> None:
+        self.server_sock.close()
+
     async def run(self) -> None:
+        """
+        It's listen_for_connections() delegator.
+        It can be extended for before and after operations.
+        """
+
         await self.listen_for_connections()

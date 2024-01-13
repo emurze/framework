@@ -1,5 +1,5 @@
 
-make run:
+make run_server:
 	poetry run python src/run.py
 
 types:

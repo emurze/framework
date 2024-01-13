@@ -20,11 +20,12 @@ class HTTPParser(IParser):
                     formatted_headers.append((dec(key), dec(val)))
             except ValueError as ve:
                 print(f"Error parsing header: {ve}")
+                raise HttpParserError("Error parsing HTTP headers")
         return formatted_headers
 
     def parse_request(self, data_http: bytes) -> dict | NoReturn:
         try:
-            print(data_http)
+            print(data_http)  # TEMPORARY
             request, headers_body = data_http.split(b"\r\n", 1)
             method, path, type_version = request.split(b" ")
             *headers, body = headers_body.split(b"\r\n")

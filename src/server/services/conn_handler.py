@@ -12,17 +12,29 @@ class ConnectionHandler(IConnectionHandler):
     spec: ISpec
 
     async def _receive_request(self, loop: IEventLoop, batch: int) -> dict:
+        """
+        Receiving and parsing request
+        """
+
         data = await loop.sock_recv(batch)
-        request = self.parser.parse_request(data)
-        return request
+        return self.parser.parse_request(data)
 
     async def _delegate_handling(self, request: dict, app: Callable) -> list:
+        """
+        Creating of a new event delegating request handling to application
+        :return application response
+        """
+
         self.spec.setup(request)
         asyncio.Task(self.spec.run(app))
         await self.spec.response_event.wait()
         return self.spec.response
 
     async def _send_response(self, loop: IEventLoop, spec_resp: list) -> None:
+        """
+        Serializing and sending spec response handled by application
+        """
+
         response = self.parser.serialize_http_response(spec_resp)
         await loop.sock_sendall(response)
 

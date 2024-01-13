@@ -6,9 +6,9 @@ from server.ports import ISpec, Event
 
 
 class ASGISpec(ISpec):
-    scope: Optional[dict] = None
-    response: Optional[list] = None
-    response_event: Optional[Event] = None
+    scope: dict
+    response: list
+    response_event: Event
 
     def setup(self, request: dict) -> None:
         self.scope = {
@@ -35,7 +35,7 @@ class ASGISpec(ISpec):
             self.response.append(message)
             self.response_event.set()
 
-    async def receive(self, message: str) -> dict:
+    async def receive(self) -> dict:
         message = {
             "type": "http.request",
             "body": self.scope.get("body"),
