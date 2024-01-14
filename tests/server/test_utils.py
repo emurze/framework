@@ -1,3 +1,5 @@
+from unittest.mock import patch, MagicMock
+
 import pytest
 
 from server.exceptions import NoAppFound, AppParseError
@@ -21,3 +23,11 @@ def test_get_app_from_str_module_not_found() -> None:
     with pytest.raises(SystemExit):
         with pytest.raises(NoAppFound):
             get_app_from_str(sys_args)
+
+
+@patch('server.utils.importlib.import_module')
+def test_get_app_from_str_uses_import(mock_import_module: MagicMock()):
+    mock_import_module.side_effect = ImportError("Some other error")
+    sys_argv = ["", 'mock_module:mock_app']
+    with pytest.raises(ImportError):
+        get_app_from_str(sys_argv)
