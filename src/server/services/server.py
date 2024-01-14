@@ -25,6 +25,10 @@ class Server(IServer):
             asyncio.Task(self.conn_handler.handle(self.loop.set_conn(conn)))
 
     def stop(self) -> None:
+        """
+        Closing server_sock will close the server
+        """
+
         self.server_sock.close()
 
     async def run(self) -> None:
