@@ -10,7 +10,7 @@ class EventLoop(IEventLoop):
     conn: socket
 
     def get_loop(self) -> int | Any:
-        if hasattr(self, 'loop'):
+        if hasattr(self, "loop"):
             return self.loop
         else:
             return 0

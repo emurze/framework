@@ -31,7 +31,7 @@ class ASGISpec(ISpec):
         await app(self.scope, self.receive, self.send)
 
     async def send(self, message: dict) -> None:
-        if message.get('type') == "http.response.body":
+        if message.get("type") == "http.response.body":
             self.response.append(message)
             self.response_event.set()
 

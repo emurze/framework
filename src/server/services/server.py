@@ -24,7 +24,7 @@ class Server(IServer):
             print(f"Connection from {address[0]}")
             asyncio.Task(self.conn_handler.handle(self.loop.set_conn(conn)))
 
-    async def stop(self) -> None:
+    def stop(self) -> None:
         self.server_sock.close()
 
     async def run(self) -> None:

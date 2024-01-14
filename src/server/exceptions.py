@@ -5,7 +5,7 @@ class CLIError(Exception):
 
     @staticmethod
     def _print(message: str) -> None:
-        print(f'Error: {message}')
+        print(f"Error: {message}")
 
 
 class BaseError(Exception):

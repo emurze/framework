@@ -13,7 +13,7 @@ def get_app_from_str(sys_argv: list) -> Callable | NoReturn:
         input_str = sys_argv[1]
         module_str, attribute_str = input_str.split(":")
     except (ValueError, IndexError):
-        raise AppParseError('App path variable is not found')
+        raise AppParseError("App path variable is not found")
 
     try:
         module = importlib.import_module(module_str)

@@ -27,16 +27,16 @@ class IServer(Protocol):
         - Creating connection events for each
     """
 
-    app: Callable
     loop: "IEventLoop"
     conn_handler: IConnectionHandler
+    server_sock: "ISocket"
 
     @abc.abstractmethod
     async def listen_for_connections(self) -> None:
         ...
 
     @abc.abstractmethod
-    async def stop(self) -> None:
+    def stop(self) -> None:
         ...
 
     @abc.abstractmethod
@@ -66,6 +66,10 @@ class Event(Protocol):
     """
     Async lib feature
     """
+
+    @abc.abstractmethod
+    def is_set(self) -> bool:
+        ...
 
     @abc.abstractmethod
     def set(self):
@@ -111,11 +115,7 @@ class ISocket(Protocol):
 
     @abc.abstractmethod
     def setup(
-        self,
-        *,
-        conn: Optional[Any] = None,
-        host: str = "0.0.0.0",
-        port: int = 8000
+        self, *, conn: Optional[Any] = None, host: str = "0.0.0.0", port: int = 8000
     ) -> None:
         ...
 

@@ -10,7 +10,7 @@ class HTTPParser(IParser):
         self.request = {}
 
     @staticmethod
-    def _format_headers(headers) -> list | NoReturn:
+    def _format_headers(headers: list[bytes]) -> list | NoReturn:
         formatted_headers = []
         for header in headers:
             try:

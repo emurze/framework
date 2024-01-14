@@ -1,5 +1,6 @@
 import asyncio
 import sys
+from asyncio import AbstractEventLoop
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import partial
@@ -10,7 +11,12 @@ from server.infrastructure.parser import HTTPParser
 from server.infrastructure.socket import Socket
 from server.infrastructure.spec import ASGISpec
 from server.ports import (
-    IParser, IConnectionHandler, IServer, ISpec, IEventLoop, ISocket
+    IParser,
+    IConnectionHandler,
+    IServer,
+    ISpec,
+    IEventLoop,
+    ISocket,
 )
 from server.services.conn_handler import ConnectionHandler
 from server.services.server import Server
@@ -69,17 +75,31 @@ class ServerContainer:
     server_sock: ISocket = field(default_factory=get_server_socket)
     conn_handler: IConnectionHandler = field(default_factory=get_conn_handler)
 
-    def run(self):
-        loop = asyncio.new_event_loop()
+    _server: Optional[IServer] = field(init=False, default=None)
+    _loop: Optional[AbstractEventLoop] = field(init=False, default=None)
+
+    @property
+    def loop(self):
+        if self._loop is not None:
+            return self._loop
+
+    def stop(self) -> None:
+        if self._server is not None:
+            self._server.stop()
+
+    def setup(self) -> None:
+        self._loop = asyncio.new_event_loop()
         self.conn_handler.app = self.app_factory()  # app parsing process
-        server = get_server(
-            loop=self.event_loop.set_loop(loop),
+
+    def run(self):
+        self._server = get_server(
+            loop=self.event_loop.set_loop(self._loop),
             conn_handler=self.conn_handler,
             server_sock=self.server_sock,
             port=self.port,
             host=self.host,
         )
         try:
-            loop.run_until_complete(server.run())
+            self._loop.run_until_complete(self._server.run())
         except KeyboardInterrupt:
-            print('\nServer was stopped')
+            print("\nServer was stopped")

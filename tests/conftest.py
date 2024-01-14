@@ -1,4 +1,5 @@
 import threading
+import time
 from typing import Any
 
 import pytest
@@ -8,15 +9,15 @@ from server.container import get_event_loop
 from server.app_fixture import app_fixture
 from server.container import ServerContainer
 from server.ports import IEventLoop
-from tests.base.client import Client
+from tests.base.client import Client, SERVER_PORT
 
 
 async def init_app() -> web.Application:
-    async def handle(request):   # noqa: F841
+    async def handle(request):  # noqa: F841
         return web.Response(text="Hello, World!")
 
     app = web.Application()
-    app.router.add_get('/', handle)
+    app.router.add_get("/", handle)
     return app
 
 
@@ -37,11 +38,15 @@ def loop() -> Any:
 
 
 @pytest.fixture
-def server(loop: IEventLoop) -> ServerContainer:
-    server = ServerContainer(app_factory=lambda: app_fixture)
-    thread = threading.Thread(target=server.run)
+def server_container(loop: IEventLoop) -> ServerContainer:
+    container = ServerContainer(
+        app_factory=lambda: app_fixture,
+        port=SERVER_PORT,
+    )
+    container.setup()
+    thread = threading.Thread(target=container.run)
+    thread.daemon = True
     thread.start()
-
-    yield server
-
-    thread.join()
+    time.sleep(.001)  # wait for server running
+    yield container
+    container.stop()

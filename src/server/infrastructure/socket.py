@@ -12,11 +12,7 @@ class Socket(ISocket):
     socket: socket.socket
 
     def setup(
-        self,
-        *_,
-        conn: Optional[Any] = None,
-        host: str = "0.0.0.0",
-        port: int = 8000
+        self, *_, conn: Optional[Any] = None, host: str = "0.0.0.0", port: int = 8000
     ) -> None:
         if conn:
             self.socket = conn
@@ -29,7 +25,7 @@ class Socket(ISocket):
             self.socket.bind((host, port))
 
     def __repr__(self) -> str:
-        return f'Socket({repr(self.socket)})'
+        return f"Socket({repr(self.socket)})"
 
     def __getstate__(self) -> NoReturn:
         raise TypeError(f"cannot pickle {self.__class__.__name__!r} object")
